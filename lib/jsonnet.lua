@@ -9,7 +9,10 @@ struct JsonnetVm *jsonnet_make(void);
 char *jsonnet_evaluate_file(struct JsonnetVm *vm,
                             const char *filename,
                             int *error);
-                            
+char *jsonnet_evaluate_snippet(struct JsonnetVm *vm,
+                               const char *filename,
+                               const char *snippet,
+                               int *error);
 char *jsonnet_realloc(struct JsonnetVm *vm, char *buf, size_t sz);
 void jsonnet_destroy(struct JsonnetVm *vm);
 
@@ -28,7 +31,20 @@ function _M.evaluate_file(self, json_file)
     
     if 0 ~= err_no[0] then
         jsonnet.jsonnet_realloc(vm, out, 0)
-        print(err_no[0]) 
+        return nil, "evaluate_file failed"
+    end
+    
+    local json_data = ffi.string(out)
+    jsonnet.jsonnet_realloc(vm, out, 0)
+    return json_data
+end
+
+function _M.evaluate_snippet(self, json_file, snippet)
+    local err_no = ffi.new("int[?]", 1)
+    local out = jsonnet.jsonnet_evaluate_snippet(self.vm, json_file, snippet, err_no)
+    
+    if 0 ~= err_no[0] then
+        jsonnet.jsonnet_realloc(vm, out, 0)
         return nil, "evaluate_file failed"
     end
     
